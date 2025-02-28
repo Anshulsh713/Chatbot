@@ -10,7 +10,7 @@ load_dotenv()
 
 # Configure Streamlit page settings
 st.set_page_config(
-    page_title="Chat with Gemini-Pro!",
+    page_title="Chat with Gemini!",
     page_icon=":brain:",  # Favicon emoji
     layout="centered",  # Page layout option
 )
@@ -19,7 +19,14 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # Set up Google Gemini-Pro AI model
 gen_ai.configure(api_key=GOOGLE_API_KEY)
-model = gen_ai.GenerativeModel('gemini-pro')
+
+try:
+    # Use the 'gemini-1.5-flash' model directly
+    model_name = 'gemini-1.5-flash'
+    model = gen_ai.GenerativeModel(model_name)
+except Exception as e:
+    st.error(f"Failed to configure the model: {e}")
+    st.stop()
 
 
 # Function to translate roles between Gemini-Pro and Streamlit terminology
@@ -36,7 +43,7 @@ if "chat_session" not in st.session_state:
 
 
 # Display the chatbot's title on the page
-st.title("🤖 Gemini Pro - ChatBot")
+st.title("🤖 Gemini - ChatBot")
 
 # Display the chat history
 for message in st.session_state.chat_session.history:
@@ -50,8 +57,10 @@ if user_prompt:
     st.chat_message("user").markdown(user_prompt)
 
     # Send user's message to Gemini-Pro and get the response
-    gemini_response = st.session_state.chat_session.send_message(user_prompt)
-
-    # Display Gemini-Pro's response
-    with st.chat_message("assistant"):
-        st.markdown(gemini_response.text)
+    try:
+        gemini_response = st.session_state.chat_session.send_message(user_prompt)
+        # Display Gemini-Pro's response
+        with st.chat_message("assistant"):
+            st.markdown(gemini_response.text)
+    except Exception as e:
+        st.error(f"Failed to get a response from the model: {e}")
